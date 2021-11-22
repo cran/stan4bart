@@ -1,0 +1,20 @@
+TBB_LIB = @TBB_LIB@
+PKG_CPPFLAGS = -I"include" -I"include/sundials" -I"../inst/include" -DBOOST_DISABLE_ASSERTS -DEIGEN_NO_DEBUG
+PKG_CXXFLAGS = @PKG_CXXFLAGS@
+SHLIB_LDFLAGS = $(SHLIB_CXXLDFLAGS)
+SHLIB_LD = $(SHLIB_CXXLD
+PKG_LIBS = @PKG_LIBS@
+
+CXX_STD = CXX14
+SOURCES = bart_util.cpp init.cpp misc_adaptiveRadixTree.c misc_string.c rc_bounds.c rc_util.c stan_sampler.cpp
+OBJECTS = bart_util.o init.o misc_adaptiveRadixTree.o misc_string.o rc_bounds.o rc_util.o stan_sampler.o
+
+
+all: $(SHLIB)
+
+clean:
+		rm -rf *.so *.o
+		rm -rf config.h
+
+.phony: all clean
+

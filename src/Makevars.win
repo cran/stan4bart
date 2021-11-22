@@ -1,0 +1,25 @@
+PKG_CPPFLAGS = -I"include" -I"include/sundials" -I"../inst/include" -DBOOST_DISABLE_ASSERTS -DEIGEN_NO_DEBUG
+
+PKG_CXXFLAGS = $(shell "${R_HOME}/bin$(R_ARCH_BIN)/Rscript" -e "RcppParallel::CxxFlags()")
+PKG_CXXFLAGS += $(shell "${R_HOME}/bin$(R_ARCH_BIN)/Rscript" -e "TBB <- system.file('include', package = 'RcppParallel', mustWork = TRUE); cat(paste0('-I', shQuote(TBB), ' -D_REENTRANT -DSTAN_THREADS'), ' ')")
+
+PKG_LIBS = $(shell "${R_HOME}/bin$(R_ARCH_BIN)/Rscript" -e "RcppParallel::RcppParallelLibs()")
+PKG_LIBS += $(shell "${R_HOME}/bin$(R_ARCH_BIN)/Rscript" -e "TBB <- system.file('lib', .Platform[['r_arch']], package = 'RcppParallel', mustWork = TRUE); cat(paste0('-Wl,-rpath,', shQuote(TBB)), ' ')")
+PKG_LIBS += -Wl,--allow-multiple-definition
+
+CXX_STD = CXX14
+SOURCES = bart_util.cpp init.cpp misc_adaptiveRadixTree.c misc_string.c rc_bounds.c rc_util.c stan_sampler.cpp
+OBJECTS = bart_util.o init.o misc_adaptiveRadixTree.o misc_string.o rc_bounds.o rc_util.o stan_sampler.o
+
+AR = gcc-ar -m$(WIN)
+NM = gcc-nm -m$(WIN)
+RANLIB = gcc-ranlib -m$(WIN)
+
+all: $(SHLIB)
+
+clean:
+		RM -rf *.so *.o
+		RM -rf config.h
+
+.phony: all clean
+
