@@ -38,7 +38,7 @@ namespace {
     void (*initializeControl)(dbarts::Control* control, SEXP controlExpr);
     void (*initializeData)(dbarts::Data* data, SEXP dataExpr);
     void (*invalidateData)(dbarts::Data* data);
-    void (*initializeModel)(dbarts::Model* model, SEXP modelExpr, const dbarts::Control* control);
+    void (*initializeModel)(dbarts::Model* model, SEXP modelExpr, const dbarts::Control* control, const dbarts::Data* data);
     void (*invalidateModel)(dbarts::Model* model);
     SEXP (*createStateExpression)(const dbarts::BARTFit* fit);
     void (*initializeState)(dbarts::BARTFit* fit, SEXP stateExpr);
@@ -54,6 +54,10 @@ namespace {
     void (*printInitialSummary)(const dbarts::BARTFit* fit);
     
     void (*getLatentVariables)(const dbarts::BARTFit*, double*);
+    void (*printTrees)(const dbarts::BARTFit*, const std::size_t*, std::size_t, const std::size_t*, std::size_t,
+                       const std::size_t*, std::size_t);
+    dbarts::FlattenedTrees* (*getTrees)(const dbarts::BARTFit*, const std::size_t*, std::size_t, const std::size_t*,
+                                        std::size_t, const std::size_t*, std::size_t);
   };
   BARTFunctionTable bartFunctions;
   
@@ -182,7 +186,8 @@ extern "C" {
     }
     
     int chain_id = 1;
-    sampler.stanSampler = new stan4bart::StanSampler(*sampler.stanModel, sampler.stanControl, chain_id, sampler.defaultWarmup, sampler.verbose);
+    sampler.stanSampler = new stan4bart::StanSampler(*sampler.stanModel, sampler.stanControl, chain_id, sampler.defaultWarmup, -1);
+    sampler.stanSampler->setVerbose(sampler.verbose);
     
     bartFunctions.initializeControl(&sampler.bartControl, bartControlExpr);
     sampler.keepTrees = sampler.bartControl.keepTrees;
@@ -194,7 +199,7 @@ extern "C" {
     sampler.bartControl.responseIsBinary = sampler.responseIsBinary;
     
     bartFunctions.initializeData(&sampler.bartData, bartDataExpr);
-    bartFunctions.initializeModel(&sampler.bartModel, bartModelExpr, &sampler.bartControl);
+    bartFunctions.initializeModel(&sampler.bartModel, bartModelExpr, &sampler.bartControl, &sampler.bartData);
     
     sampler.bartSampler = static_cast<dbarts::BARTFit*>(::operator new (sizeof(dbarts::BARTFit)));
     bartFunctions.initializeFit(sampler.bartSampler, &sampler.bartControl, &sampler.bartModel, &sampler.bartData);
@@ -396,7 +401,7 @@ extern "C" {
     sampler.control.numChains = XLENGTH(stateExpr);
     sampler.control.keepTrees = true;
     bartFunctions.initializeData(&sampler.data, dataExpr);
-    bartFunctions.initializeModel(&sampler.model, modelExpr, &sampler.control);
+    bartFunctions.initializeModel(&sampler.model, modelExpr, &sampler.control, &sampler.data);
     
     sampler.fit = static_cast<dbarts::BARTFit*>(::operator new (sizeof(dbarts::BARTFit)));
     bartFunctions.initializeFit(sampler.fit, &sampler.control, &sampler.model, &sampler.data);
@@ -415,6 +420,234 @@ extern "C" {
     UNPROTECT(1);
     
     return result;
+  }
+
+  static SEXP printTrees(SEXP storedBARTSamplerExpr, SEXP chainIndicesExpr, SEXP sampleIndicesExpr, SEXP treeIndicesExpr)
+  //static SEXP printTrees(SEXP samplerExpr, SEXP chainIndicesExpr, SEXP sampleIndicesExpr, SEXP treeIndicesExpr)
+  {
+    /* Sampler* samplerPtr = static_cast<Sampler*>(R_ExternalPtrAddr(samplerExpr));
+    if (samplerPtr == NULL) Rf_error("printTrees called on NULL external pointer");
+    Sampler& sampler(*samplerPtr); 
+
+    const dbarts::BARTFit* fit(sampler.bartSampler);
+    const dbarts::Control& control(sampler.bartControl); */
+    
+    StoredBARTSampler* samplerPtr = static_cast<StoredBARTSampler*>(R_ExternalPtrAddr(storedBARTSamplerExpr));
+    if (samplerPtr == NULL) Rf_error("getTrees called on NULL external pointer");
+    StoredBARTSampler& sampler(*samplerPtr);
+    
+    const dbarts::BARTFit* fit(sampler.fit);
+    const dbarts::Control& control(sampler.control);
+    
+    size_t numChains  = control.numChains;
+    size_t numSamples = control.keepTrees ? fit->currentNumSamples : 0;
+    size_t numTrees   = control.numTrees;
+
+    size_t numChainIndices  = Rf_isNull(chainIndicesExpr)  ? numChains  : rc_getLength(chainIndicesExpr);
+    size_t numSampleIndices = Rf_isNull(sampleIndicesExpr) ? numSamples : rc_getLength(sampleIndicesExpr);
+    size_t numTreeIndices   = Rf_isNull(treeIndicesExpr)   ? numTrees   : rc_getLength(treeIndicesExpr);
+
+    if (numChainIndices > numChains)
+      Rf_error("%lu chains specified but only %lu in sampler", numChainIndices, numChains);
+    if (numSampleIndices > numSamples)
+      Rf_error("%lu samples specified but only %lu in sampler", numSampleIndices, numSamples);
+    if (numTreeIndices > numTrees)
+      Rf_error("%lu trees specified but only %lu in sampler", numTreeIndices, numTrees);
+    
+    size_t* chainIndices  = new size_t[numChainIndices];
+    size_t* sampleIndices = new size_t[numSamples];
+    size_t* treeIndices   = new size_t[numTreeIndices];
+    
+    if (Rf_isNull(chainIndicesExpr)) {
+      for (size_t i = 0; i < numChains; ++i) chainIndices[i] = i;
+    } else {
+      int* i_chainIndices = INTEGER(chainIndicesExpr);
+      for (size_t i = 0; i < numChainIndices; ++i) chainIndices[i] = static_cast<size_t>(i_chainIndices[i] - 1);
+    }
+    
+    if (Rf_isNull(sampleIndicesExpr)) {
+      for (size_t i = 0; i < numSamples; ++i) sampleIndices[i] = i;
+    } else {
+      int* i_sampleIndices = INTEGER(sampleIndicesExpr);
+      for (size_t i = 0; i < numSampleIndices; ++i) sampleIndices[i] = static_cast<size_t>(i_sampleIndices[i] - 1);
+    }
+    
+    if (Rf_isNull(treeIndicesExpr)) {
+      for (size_t i = 0; i < numTrees; ++i) treeIndices[i] = i;
+    } else {
+      int* i_treeIndices = INTEGER(treeIndicesExpr);
+      for (size_t i = 0; i < numTreeIndices; ++i) treeIndices[i] = static_cast<size_t>(i_treeIndices[i] - 1);
+    }
+    
+    bartFunctions.printTrees(fit, chainIndices, numChainIndices, sampleIndices, numSampleIndices, treeIndices, numTreeIndices);
+
+    delete [] treeIndices;
+    delete [] sampleIndices;
+    delete [] chainIndices;
+    
+    return R_NilValue;
+  }
+  
+  static SEXP getTrees(SEXP storedBARTSamplerExpr, SEXP chainIndicesExpr, SEXP sampleIndicesExpr, SEXP treeIndicesExpr)
+  //static SEXP getTrees(SEXP samplerExpr, SEXP chainIndicesExpr, SEXP sampleIndicesExpr, SEXP treeIndicesExpr)
+  {
+    /*Sampler* samplerPtr = static_cast<Sampler*>(R_ExternalPtrAddr(samplerExpr));
+    if (samplerPtr == NULL) Rf_error("getTrees called on NULL external pointer");
+    Sampler& sampler(*samplerPtr);
+
+    const dbarts::BARTFit* fit(sampler.bartSampler);
+    const dbarts::Control& control(sampler.bartControl);
+    */
+
+    StoredBARTSampler* samplerPtr = static_cast<StoredBARTSampler*>(R_ExternalPtrAddr(storedBARTSamplerExpr));
+    if (samplerPtr == NULL) Rf_error("getTrees called on NULL external pointer");
+    StoredBARTSampler& sampler(*samplerPtr);
+    
+    const dbarts::Control& control(sampler.control);
+    const dbarts::BARTFit* fit(sampler.fit);
+     
+    size_t numChains  = control.numChains;
+    size_t numSamples = control.keepTrees ? fit->currentNumSamples : 0;
+    size_t numTrees   = control.numTrees;
+
+    size_t numChainIndices  = Rf_isNull(chainIndicesExpr)  ? numChains  : rc_getLength(chainIndicesExpr);
+    size_t numSampleIndices = Rf_isNull(sampleIndicesExpr) ? numSamples : rc_getLength(sampleIndicesExpr);
+    size_t numTreeIndices   = Rf_isNull(treeIndicesExpr)   ? numTrees   : rc_getLength(treeIndicesExpr);
+    
+    if (numChainIndices > numChains)
+      Rf_error("%lu chains specified but only %lu in sampler", numChainIndices, numChains);
+    if (numSampleIndices > numSamples)
+      Rf_error("%lu samples specified but only %lu in sampler", numSampleIndices, numSamples);
+    if (numTreeIndices > numTrees)
+      Rf_error("%lu trees specified but only %lu in sampler", numTreeIndices, numTrees);
+    
+    size_t* chainIndices  = new size_t[numChainIndices];
+    size_t* sampleIndices = control.keepTrees ? new size_t[numSamples] : NULL;
+    size_t* treeIndices   = new size_t[numTreeIndices];
+    
+    if (Rf_isNull(chainIndicesExpr)) {
+      for (size_t i = 0; i < numChains; ++i) chainIndices[i] = i;
+    } else {
+      int* i_chainIndices = INTEGER(chainIndicesExpr);
+      for (size_t i = 0; i < numChainIndices; ++i) chainIndices[i] = static_cast<size_t>(i_chainIndices[i] - 1);
+    }
+    
+    if (Rf_isNull(sampleIndicesExpr)) {
+      for (size_t i = 0; i < numSamples; ++i) sampleIndices[i] = i;
+    } else {
+      int* i_sampleIndices = INTEGER(sampleIndicesExpr);
+      for (size_t i = 0; i < numSampleIndices; ++i) sampleIndices[i] = static_cast<size_t>(i_sampleIndices[i] - 1);
+    }
+    
+    if (Rf_isNull(treeIndicesExpr)) {
+      for (size_t i = 0; i < numTrees; ++i) treeIndices[i] = i;
+    } else {
+      int* i_treeIndices = INTEGER(treeIndicesExpr);
+      for (size_t i = 0; i < numTreeIndices; ++i) treeIndices[i] = static_cast<size_t>(i_treeIndices[i] - 1);
+    }
+        
+    dbarts::FlattenedTrees* flattenedTreesPtr = bartFunctions.getTrees(fit, chainIndices, numChainIndices, sampleIndices, numSampleIndices, treeIndices, numTreeIndices);
+    
+    delete [] treeIndices;
+    delete [] sampleIndices;
+    delete [] chainIndices;
+
+    dbarts::FlattenedTrees& flattenedTrees(*flattenedTreesPtr);
+    
+    R_xlen_t numCols = 4 + (numChains > 1 ? 1 : 0) + (control.keepTrees ? 1 : 0);
+    SEXP resultExpr = PROTECT(rc_newList(numCols));
+        
+    SEXP classExpr = PROTECT(rc_newCharacter(1));
+    SET_STRING_ELT(classExpr, 0, Rf_mkChar("data.frame"));
+    Rf_setAttrib(resultExpr, R_ClassSymbol, classExpr);
+    UNPROTECT(1);
+    
+    SEXP resultRowNamesExpr;
+    rc_allocateInSlot2(resultRowNamesExpr, resultExpr, R_RowNamesSymbol, STRSXP, flattenedTrees.totalNumNodes);
+    
+    SEXP resultNamesExpr;
+    rc_allocateInSlot2(resultNamesExpr, resultExpr, R_NamesSymbol, STRSXP, numCols);
+    
+    int* chainNumber = NULL;
+    int* sampleNumber = NULL;
+    int* treeNumber, *numObservations, *variable;
+    double* value;
+        
+    R_xlen_t colNum = 0;
+    if (numChains > 1) {
+      SET_VECTOR_ELT(resultExpr, colNum, PROTECT(rc_newInteger(flattenedTrees.totalNumNodes)));
+      SET_STRING_ELT(resultNamesExpr, colNum, PROTECT(Rf_mkChar("chain")));
+      UNPROTECT(2);
+      chainNumber = INTEGER(VECTOR_ELT(resultExpr, colNum));
+      ++colNum;
+    }
+    if (control.keepTrees) {
+      SET_VECTOR_ELT(resultExpr, colNum, PROTECT(rc_newInteger(flattenedTrees.totalNumNodes)));
+      SET_STRING_ELT(resultNamesExpr, colNum, PROTECT(Rf_mkChar("sample")));
+      UNPROTECT(2);
+      sampleNumber = INTEGER(VECTOR_ELT(resultExpr, colNum));
+      ++colNum;
+    }
+    SET_VECTOR_ELT(resultExpr, colNum, PROTECT(rc_newInteger(flattenedTrees.totalNumNodes)));
+    SET_STRING_ELT(resultNamesExpr, colNum, PROTECT(Rf_mkChar("tree")));
+    treeNumber = INTEGER(VECTOR_ELT(resultExpr, colNum));
+    ++colNum;
+    SET_VECTOR_ELT(resultExpr, colNum, PROTECT(rc_newInteger(flattenedTrees.totalNumNodes)));
+    SET_STRING_ELT(resultNamesExpr, colNum, PROTECT(Rf_mkChar("n")));
+    numObservations = INTEGER(VECTOR_ELT(resultExpr, colNum));
+    ++colNum;
+    SET_VECTOR_ELT(resultExpr, colNum, PROTECT(rc_newInteger(flattenedTrees.totalNumNodes)));
+    SET_STRING_ELT(resultNamesExpr, colNum, PROTECT(Rf_mkChar("var")));
+    variable = INTEGER(VECTOR_ELT(resultExpr, colNum));
+    ++colNum;
+    SET_VECTOR_ELT(resultExpr, colNum, PROTECT(rc_newReal(flattenedTrees.totalNumNodes)));
+    SET_STRING_ELT(resultNamesExpr, colNum, PROTECT(Rf_mkChar("value")));
+    value = REAL(VECTOR_ELT(resultExpr, colNum));
+    UNPROTECT(8);
+    
+    size_t numDigits = 1;
+    size_t temp = flattenedTrees.totalNumNodes;
+    while (temp >= 10) {
+      temp /= 10;
+      ++numDigits;
+    }
+    char* buffer = new char[numDigits + 1];
+    for (size_t i = 0; i < flattenedTrees.totalNumNodes; ++i) {
+      if (chainNumber != NULL)
+        chainNumber[i] = static_cast<int>(flattenedTrees.chainNumber[i] + 1);
+      if (sampleNumber != NULL)
+        sampleNumber[i] = static_cast<int>(flattenedTrees.sampleNumber[i] + 1);
+      treeNumber[i] = static_cast<int>(flattenedTrees.treeNumber[i] + 1);
+      numObservations[i] = static_cast<int>(flattenedTrees.numObservations[i]);
+      int variable_i = static_cast<int>(flattenedTrees.variable[i]);
+      variable[i] = variable_i >= 0 ? variable_i + 1 : variable_i;
+      value[i] = flattenedTrees.value[i];
+#if defined(__MINGW32__) && __cplusplus < 201112L
+#  ifdef _WIN64
+      std::sprintf(buffer, "%lu", static_cast<unsigned long>(i + 1));
+#  else
+      std::sprintf(buffer, "%u", i + 1);
+#  endif
+#else
+      std::sprintf(buffer, "%zu", i + 1);
+#endif
+      SET_STRING_ELT(resultRowNamesExpr, i, PROTECT(Rf_mkChar(buffer)));
+      UNPROTECT(1);
+    }
+    
+    delete [] buffer;
+    // delete flattenedTreesPtr;
+    delete [] flattenedTrees.value;
+    delete [] flattenedTrees.variable;
+    delete [] flattenedTrees.numObservations;
+    delete [] flattenedTrees.treeNumber;
+    delete [] flattenedTrees.sampleNumber;
+    delete [] flattenedTrees.chainNumber;
+    ::operator delete(flattenedTreesPtr);
+    
+    UNPROTECT(1);
+    
+    return resultExpr;
   }
   
 #ifdef SUPPRESS_ENUM_CONVERSION_WARNING
@@ -707,7 +940,7 @@ bit_cast(const From& src) noexcept
 // is_trivially_copyable is compiler specific and isn't worth trying to drop in
 // an implementation.
 template <class To, class From>
-typename To
+To
 bit_cast(const From& src)
 {
   To dst;
@@ -734,7 +967,11 @@ namespace {
     bartFunctions.initializeControl     = std::bit_cast<void (*)(dbarts::Control*, SEXP)>(R_GetCCallable("dbarts", "initializeControl"));
     bartFunctions.initializeData        = std::bit_cast<void (*)(dbarts::Data*, SEXP)>(R_GetCCallable("dbarts", "initializeData"));
     bartFunctions.invalidateData        = std::bit_cast<void (*)(dbarts::Data*)>(R_GetCCallable("dbarts", "invalidateData"));
-    bartFunctions.initializeModel       = std::bit_cast<void (*)(dbarts::Model*, SEXP, const dbarts::Control*)>(R_GetCCallable("dbarts", "initializeModel"));
+    bartFunctions.initializeModel       = std::bit_cast<void (*)(
+      dbarts::Model*,
+      SEXP,
+      const dbarts::Control*,
+      const dbarts::Data*)>(R_GetCCallable("dbarts", "initializeModel"));
     bartFunctions.invalidateModel       = std::bit_cast<void (*)(dbarts::Model*)>(R_GetCCallable("dbarts", "invalidateModel"));
     bartFunctions.setControl            = std::bit_cast<void (*)(dbarts::BARTFit*, const dbarts::Control*)>(R_GetCCallable("dbarts", "setControl"));
     
@@ -751,6 +988,12 @@ namespace {
     bartFunctions.printInitialSummary   = std::bit_cast<void (*)(const dbarts::BARTFit*)>(R_GetCCallable("dbarts", "printInitialSummary"));
     
     bartFunctions.getLatentVariables    = std::bit_cast<void (*)(const dbarts::BARTFit*, double*)>(R_GetCCallable("dbarts", "storeLatents"));
+    bartFunctions.printTrees            = std::bit_cast<void (*)(const dbarts::BARTFit*, const std::size_t*, std::size_t,
+                                                                 const std::size_t*, std::size_t,
+                                                                 const std::size_t*, std::size_t)>(R_GetCCallable("dbarts", "printTrees"));
+    bartFunctions.getTrees              = std::bit_cast<dbarts::FlattenedTrees* (*)(
+      const dbarts::BARTFit*, const std::size_t*, std::size_t,
+      const std::size_t*, std::size_t, const std::size_t*, std::size_t)>(R_GetCCallable("dbarts", "getTrees"));
   }
 }
 
@@ -830,6 +1073,8 @@ static R_CallMethodDef R_callMethods[] = {
   DEF_FUNC("stan4bart_predictBART", predictBART, 3),
   DEF_FUNC("stan4bart_getParametricMean", getParametricMean, 1),
   DEF_FUNC("stan4bart_getBARTDataRange", getBARTDataRange, 1),
+  DEF_FUNC("stan4bart_printTrees", printTrees, 4),
+  DEF_FUNC("stan4bart_getTrees", getTrees, 4),
   {NULL, NULL, 0}
 };
 
