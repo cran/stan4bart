@@ -1,6 +1,15 @@
 #include <ext/Rinternals.h>
+#include <R_ext/Arith.h> // R_NaReal
 #include <R_ext/Rdynload.h>
 #include <R_ext/Visibility.h>
+
+#ifdef HAVE_STD_SNPRINTF
+// snprintf in c++11, before that have to use C version
+#  include <cstdio>
+using std::snprintf;
+#else
+#  include <stdio.h>
+#endif
 
 #include <exception>
 #include <memory> // unique_ptr
@@ -124,7 +133,11 @@ namespace {
     double* bartOffset;
     double* stanOffset;
     double* bartLatents;
-        
+    
+    bool keepFits;
+    SEXP callback;
+    SEXP callbackEnv;
+    
     Sampler() :
       stanModel(NULL), stanSampler(NULL), bartModel(false), bartSampler(NULL), bartOffset(NULL), stanOffset(NULL), bartLatents(NULL)
     {
@@ -177,7 +190,7 @@ extern "C" {
     double sigma_init = rc_getDouble(rc_getListElement(commonControlExpr, "sigma_init"), "sigma_init",
       RC_VALUE | RC_GT, 0.0, RC_VALUE | RC_DEFAULT, 1.0,
       RC_END);
-    
+
     sampler.stanModel = stan4bart::createStanModelFromExpression(stanDataExpr);
     stan4bart::initializeStanControlFromExpression(sampler.stanControl, stanControlExpr);
     if (sampler.stanControl.skip == R_NaInt) {
@@ -558,9 +571,9 @@ extern "C" {
     SEXP resultExpr = PROTECT(rc_newList(numCols));
         
     SEXP classExpr = PROTECT(rc_newCharacter(1));
-    SET_STRING_ELT(classExpr, 0, Rf_mkChar("data.frame"));
+    SET_STRING_ELT(classExpr, 0, PROTECT(Rf_mkChar("data.frame")));
     Rf_setAttrib(resultExpr, R_ClassSymbol, classExpr);
-    UNPROTECT(1);
+    UNPROTECT(2);
     
     SEXP resultRowNamesExpr;
     rc_allocateInSlot2(resultRowNamesExpr, resultExpr, R_RowNamesSymbol, STRSXP, flattenedTrees.totalNumNodes);
@@ -624,12 +637,12 @@ extern "C" {
       value[i] = flattenedTrees.value[i];
 #if defined(__MINGW32__) && __cplusplus < 201112L
 #  ifdef _WIN64
-      std::sprintf(buffer, "%lu", static_cast<unsigned long>(i + 1));
+      snprintf(buffer, numDigits + 1, "%lu", static_cast<unsigned long>(i + 1));
 #  else
-      std::sprintf(buffer, "%u", i + 1);
+      snprintf(buffer, numDigits + 1, "%u", i + 1);
 #  endif
 #else
-      std::sprintf(buffer, "%zu", i + 1);
+      snprintf(buffer, numDigits + 1, "%zu", i + 1);
 #endif
       SET_STRING_ELT(resultRowNamesExpr, i, PROTECT(Rf_mkChar(buffer)));
       UNPROTECT(1);
@@ -667,16 +680,50 @@ extern "C" {
     ResultsType resultsType = static_cast<ResultsType>(rc_getInt(resultsTypeExpr, "results_type",
      RC_VALUE | RC_DEFAULT, static_cast<int>(RESULTS_BOTH),
      RC_END));
+
+    SEXP callbackClosure = R_NilValue;
+    SEXP yhat_train = R_NilValue;
+    SEXP yhat_test = R_NilValue;
+    SEXP stan_pars = R_NilValue;
+    SEXP callbackResults = R_NilValue;
+    size_t callbackResultLength = 0;
+    unsigned int protectCount = 0;
+    if (sampler.callback != R_NilValue) {
+      yhat_train = PROTECT(rc_newReal(sampler.bartData.numObservations));
+      ++protectCount;
+      if (sampler.bartData.numTestObservations > 0L) {
+        yhat_test = PROTECT(rc_newReal(sampler.bartData.numTestObservations));
+        ++protectCount;
+      }
+      stan_pars = PROTECT(rc_newReal(sampler.stanSampler->num_pars));
+      ++protectCount;
+      SEXP stan_par_names = PROTECT(rc_newCharacter(sampler.stanSampler->num_pars));
+      ++protectCount;
+      size_t pos = 0;
+      for (size_t i = 0; i < sampler.stanSampler->sample_names.size(); ++i)
+        SET_STRING_ELT(stan_par_names, pos++, Rf_mkChar(sampler.stanSampler->sample_names[i].c_str()));
+      for (size_t i = 0; i < sampler.stanSampler->sampler_names.size(); ++i)
+        SET_STRING_ELT(stan_par_names, pos++, Rf_mkChar(sampler.stanSampler->sampler_names[i].c_str()));
+      for (size_t i = 0; i < sampler.stanSampler->constrained_param_names.size(); ++i)
+        SET_STRING_ELT(stan_par_names, pos++, Rf_mkChar(sampler.stanSampler->constrained_param_names[i].c_str()));
+      rc_setNames(stan_pars, stan_par_names);
+        
+      callbackClosure = PROTECT(Rf_lang4(sampler.callback, yhat_train, yhat_test, stan_pars));
+      ++protectCount;
+    }
     
     stan4bart::IterableBartResults* bartSamples = NULL;
     // allocate storage for results
+    
+    size_t numStorageSamples = sampler.keepFits ? numIter : 1;
+
     if (resultsType == RESULTS_BOTH || resultsType == RESULTS_BART)
       bartSamples = new stan4bart::IterableBartResults(
         sampler.bartData.numObservations, sampler.bartData.numPredictors,
-        sampler.bartData.numTestObservations, numIter,
+        sampler.bartData.numTestObservations, numStorageSamples,
         1 /* num chains */, !sampler.bartModel.kPrior->isFixed);
     if (resultsType == RESULTS_BOTH || resultsType == RESULTS_STAN)
-      sampler.stanSampler->sample_writer.resize(sampler.stanSampler->num_pars, numIter);
+      sampler.stanSampler->sample_writer.resize(sampler.stanSampler->num_pars, numStorageSamples);
     
     size_t n = sampler.bartData.numObservations;
     
@@ -752,7 +799,8 @@ extern "C" {
         } */
         
         // Rprintf("incrementing sampling\n");
-        sampler.stanSampler->sample_writer.increment();
+        if (sampler.keepFits)
+          sampler.stanSampler->sample_writer.increment();
         
         // Rprintf("setting bart offset\n");
         // this will adjusting the scale every iteration during the first 1/8 of warmup, 
@@ -791,36 +839,120 @@ extern "C" {
           stan4bart::setResponse(*sampler.stanModel, sampler.bartLatents);
         }
         
+        if (sampler.callback != R_NilValue) {
+          std::memcpy(REAL(yhat_train), const_cast<const double*>(bartSamples->trainingSamples), n * sizeof(double));
+          if (yhat_test != R_NilValue)
+            std::memcpy(REAL(yhat_test), const_cast<const double*>(bartSamples->testSamples), sampler.bartData.numTestObservations * sizeof(double));
+          sampler.stanSampler->copyOutParameters(REAL(stan_pars), sampler.keepFits ? -1 : 0);
+
+          SEXP callbackIterResult = PROTECT(Rf_eval(callbackClosure, sampler.callbackEnv));
+          bool resultAllocated = false;
+          if (callbackIterResult != R_NilValue && rc_getLength(callbackIterResult) > 0) {
+            callbackResultLength = rc_getLength(callbackIterResult);
+            if (callbackResults == R_NilValue) {
+              callbackResults = PROTECT(rc_newReal(callbackResultLength * numIter));
+              resultAllocated = true;
+              ++protectCount;
+              SEXP existingDims = rc_getDims(callbackIterResult);
+              if (existingDims != R_NilValue) {
+                SEXP dims = PROTECT(rc_newInteger(rc_getLength(existingDims) + 1));
+                for (size_t i = 0 ; i < rc_getLength(existingDims); ++i)
+                  INTEGER(dims)[i] = INTEGER(existingDims)[i];
+                INTEGER(dims)[rc_getLength(existingDims)] = numIter;
+                Rf_setAttrib(callbackResults, R_DimSymbol, dims);
+                UNPROTECT(1);
+              } else {
+                rc_setDims(callbackResults, static_cast<int>(callbackResultLength), numIter, -1);
+              }
+              if (rc_getNames(callbackIterResult) != R_NilValue) {
+                SEXP dimNames = PROTECT(rc_newList(rc_getLength(rc_getDims(callbackResults))));
+                rc_setDimNames(callbackResults, dimNames);
+                UNPROTECT(1);
+                SET_VECTOR_ELT(dimNames, 0, rc_getNames(callbackIterResult));
+                SET_VECTOR_ELT(dimNames, 1, R_NilValue);
+              } else if (rc_getDimNames(callbackIterResult) != R_NilValue) {
+                SEXP dimNames = PROTECT(rc_newList(rc_getLength(rc_getDims(callbackResults))));
+                rc_setDimNames(callbackResults, dimNames);
+                UNPROTECT(1);
+                SEXP existingDimNames = rc_getDimNames(callbackIterResult);
+                for (size_t i = 0 ; i < rc_getLength(existingDimNames); ++i)
+                  SET_VECTOR_ELT(dimNames, i, VECTOR_ELT(existingDimNames, i));
+                SET_VECTOR_ELT(dimNames, rc_getLength(existingDimNames), R_NilValue);
+                
+                SEXP existingDimNamesNames = rc_getNames(existingDimNames);
+                if (existingDimNamesNames != R_NilValue) {
+                  SEXP dimNamesNames = PROTECT(rc_newCharacter(rc_getLength(rc_getDims(callbackResults))));
+                  for (size_t i = 0; i < rc_getLength(existingDimNamesNames); ++i) {
+                    SET_STRING_ELT(dimNamesNames, i, STRING_ELT(existingDimNamesNames, i));
+                  }
+                  SET_STRING_ELT(dimNamesNames, rc_getLength(existingDimNamesNames), PROTECT(Rf_mkChar("iterations")));
+                  rc_setNames(dimNames, dimNamesNames);
+                  UNPROTECT(2);
+                }
+              }
+            }
+            std::memcpy(REAL(callbackResults) + iter * callbackResultLength,
+                        const_cast<const double*>(REAL(callbackIterResult)),
+                        callbackResultLength * sizeof(double));
+          }
+          // We aren't balanced if it is our first result, so we have to unprotect
+          // something that isn't the most recent on the stack.
+          if (resultAllocated)
+            UNPROTECT_PTR(callbackIterResult);
+          else
+            UNPROTECT(1);
+        }
+
         // Rprintf("increment bart pointers\n");
-        bartSamples->incrementPointers();
+        if (sampler.keepFits)
+          bartSamples->incrementPointers();
       }
     }
     
     PutRNGstate();
     
-    if (bartSamples != NULL) bartSamples->resetPointers();
-    
+    SEXP resultExpr = R_NilValue;
     // Rprintf("writing results\n");
-    SEXP resultExpr = PROTECT(rc_newList(resultsType == RESULTS_BOTH ? 2 : 1));
-    int pos = 0;
-    if (resultsType == RESULTS_BOTH || resultsType == RESULTS_STAN)
-      SET_VECTOR_ELT(resultExpr, pos++, createStanResultsExpr(sampler.stanSampler->sample_writer));
-    if (resultsType == RESULTS_BOTH || resultsType == RESULTS_BART)
-      SET_VECTOR_ELT(resultExpr, pos, stan4bart::createBartResultsExpr(*sampler.bartSampler, *bartSamples));
-    
-    SEXP namesExpr = PROTECT(rc_newCharacter(XLENGTH(resultExpr)));
-    pos = 0;
-    if (resultsType == RESULTS_BOTH || resultsType == RESULTS_STAN)
-      SET_STRING_ELT(namesExpr, pos++, Rf_mkChar("stan"));
-    if (resultsType == RESULTS_BOTH || resultsType == RESULTS_BART)
-      SET_STRING_ELT(namesExpr, pos, Rf_mkChar("bart"));
-    
-    rc_setNames(resultExpr, namesExpr);
-    UNPROTECT(1);
+    if (sampler.keepFits) {
+      if (bartSamples != NULL) bartSamples->resetPointers();
+      
+      size_t resultsLength = (resultsType == RESULTS_BOTH ? 2 : 1) + 
+                             (sampler.callback != R_NilValue ? 1 : 0);
+      resultExpr = PROTECT(rc_newList(resultsLength));
+      ++protectCount;
+      int pos = 0;
+      if (resultsType == RESULTS_BOTH || resultsType == RESULTS_STAN)
+        SET_VECTOR_ELT(resultExpr, pos++, createStanResultsExpr(sampler.stanSampler->sample_writer));
+      if (resultsType == RESULTS_BOTH || resultsType == RESULTS_BART)
+        SET_VECTOR_ELT(resultExpr, pos++, stan4bart::createBartResultsExpr(*sampler.bartSampler, *bartSamples));
+      if (sampler.callback != R_NilValue)
+        SET_VECTOR_ELT(resultExpr, pos, callbackResults);
+      
+      SEXP namesExpr = PROTECT(rc_newCharacter(rc_getLength(resultExpr)));
+      pos = 0;
+      if (resultsType == RESULTS_BOTH || resultsType == RESULTS_STAN)
+        SET_STRING_ELT(namesExpr, pos++, Rf_mkChar("stan"));
+      if (resultsType == RESULTS_BOTH || resultsType == RESULTS_BART)
+        SET_STRING_ELT(namesExpr, pos++, Rf_mkChar("bart"));
+      if (sampler.callback != R_NilValue)
+        SET_STRING_ELT(namesExpr, pos, Rf_mkChar("callback"));
+      
+      rc_setNames(resultExpr, namesExpr);
+      UNPROTECT(1);
+    } else {
+      resultExpr = PROTECT(rc_newList(1));
+      ++protectCount;
+      SET_VECTOR_ELT(resultExpr, 0, callbackResults);
+      SEXP namesExpr = PROTECT(rc_newCharacter(rc_getLength(resultExpr)));
+      SET_STRING_ELT(namesExpr, 0, Rf_mkChar("callback"));
+
+      rc_setNames(resultExpr, namesExpr);
+      UNPROTECT(1);
+    }
     
     delete bartSamples;
-    
-    UNPROTECT(1);
+
+    UNPROTECT(protectCount);
     
     return(resultExpr);
   }
@@ -836,6 +968,8 @@ extern "C" {
     
     Rprintf("stan control:\n");
     printStanControl(sampler.stanControl);
+    Rprintf("stan model:\n");
+    stan4bart::printStanModel(sampler.stanModel);
     Rprintf("bart init:\n");
     bartFunctions.printInitialSummary(sampler.bartSampler);
     
@@ -898,6 +1032,15 @@ void initializeSamplerFromExpression(Sampler& sampler, SEXP commonControlExpr)
   
   if (sampler.refresh == R_NaInt)
     sampler.refresh = 200;
+
+  sampler.keepFits = rc_getBool(rc_getListElement(commonControlExpr, "keep_fits"), "keepFits",
+    RC_NA | RC_NO, RC_END);
+  sampler.callback = rc_getListElement(commonControlExpr, "callback");
+  if (sampler.callback != R_NilValue && !Rf_isFunction(sampler.callback))
+    Rf_error("callback must be a function or NULL");
+  sampler.callbackEnv = rc_getListElement(commonControlExpr, "callbackEnv");
+  if (sampler.callbackEnv != R_NilValue && !Rf_isEnvironment(sampler.callbackEnv))
+    Rf_error("callbackEnv must be an environment or NULL");
 }
 
 #ifdef SUPPRESS_ENUM_CONVERSION_WARNING

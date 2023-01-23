@@ -39,6 +39,8 @@ stan4bart(formula,
           refresh = max(iter \%/\% 10L, 1L),
           offset_type = c("default", "fixef", "ranef", "bart", "parametric"),
           seed = NA_integer_,
+          keep_fits = TRUE,
+          callback = NULL,
           stan_args = NULL,
           bart_args = NULL)
 }
@@ -98,6 +100,11 @@ stan4bart(formula,
   \code{\link{set.seed}} will suffice. The primary use of \code{seed} is to
   obtain reproducible results when multi-threaded. See Reproducibility section
   below.}
+  \item{keep_fits}{Logical that, when false, prevents the sampler from
+  storing each draw. Intended to be used with \code{callback}.}
+  \item{callback}{A function that will be called at each iteration, accepting
+  three arguments: \code{yhat.train}, \code{yhat.test}, \code{stan_pars}.
+  See details for more information.}
   \item{stan_args}{optional list, specifying further arguments to Stan. See
   details below.}
   \item{bart_args}{optional list, specifying further arguments to BART. See
@@ -217,6 +224,27 @@ stan4bart(formula,
     single-threaded - \code{\link{set.seed}} will suffice. When multi-threaded,
     \code{seed} can be used to obtain reproducible results.
   }
+  \subsection{Callbacks}{
+    Callbacks can be used to avoid expensive memory allocation, aggregating
+    results as the sampler proceeds instead of waiting until the end. A callback
+    funtion must accept the arguments:
+    \itemize{
+      \item \code{yhat.train} - BART predictions of the expected value of the
+      training data, conditioned on the Stan parameters
+      \item \code{yhat.test} - when applicable, the same values as above but
+      for the test data; \code{NULL} otherwise
+      \item \code{stan_pars} - named vector of Stan samples, including fixed
+      and random effects and variance parameters
+    }
+    It is expected that the callback will return a vector of the same length
+    each time. If not, invalid memory writes will likely result. If the
+    result of the callback has names, they will be added to the result.
+  }
+  \subsection{Serialization}{
+    At present, \code{stan4bart} models cannot be safely \code{\link{save}}d
+    and \code{\link{load}ed} in a way that the sampler can be restarted. This
+    feature may be added in the future.
+  }
 }
 \value{
   Returns a list assigned class \code{stan4bartFit}. Has components below, some
@@ -258,6 +286,7 @@ stan4bart(formula,
   \item{\code{Sigma}}{samples of covariance of random effects; also a named list
   with one element for each grouping factor}
   \item{\code{fixef}}{samples of the fixed effects, or unmodeled coefficients}
+  \item{\code{callback}}{samples returned by an optional callback function}
   
   Other items:
   \item{\code{warmup}}{a list of warmup samples, containing the same objects in

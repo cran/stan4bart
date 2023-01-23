@@ -544,6 +544,11 @@ double StanSampler::getSigma(const StanModel& model) const
   return model.get_aux(sample_writer.x_curr + sample_writer_offset);
 }
 
+void StanSampler::copyOutParameters(double* result, int offset) const
+{
+  std::memcpy(result, const_cast<const double*>(sample_writer.x_curr) + offset * num_pars, num_pars * sizeof(double));
+}
+
 void StanSampler::run(bool isWarmup)
 {
   sampler->run(isWarmup);
@@ -601,6 +606,13 @@ void printStanControl(const StanControl& control)
           control.adapt_window, control.adapt_t0, control.stepsize,
           control.stepsize_jitter, control.max_treedepth);
 }
+
+
+void printStanModel(const StanModel* model)
+{
+  model->print(rstan::io::rcout);
+}
+
 
 }
 

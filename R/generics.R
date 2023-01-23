@@ -170,13 +170,14 @@ extract.stan4bartFit <-
   function(object,
            type = c("ev", "ppd", "fixef", "indiv.fixef", "ranef", "indiv.ranef",
                     "indiv.bart", "sigma", "Sigma", "k", "varcount", "stan",
-                    "trees"),
+                    "trees", "callback"),
            sample = c("train", "test"),
            combine_chains = TRUE,
            sample_new_levels = TRUE,
            include_warmup = FALSE,
            ...)
 {
+  matchedCall <- match.call()
   type <- match.arg(type)
   
   if (type == "trees") {
@@ -203,6 +204,17 @@ extract.stan4bartFit <-
     stop("'include_warmup' must be logical or \"only\"")
   } else {
     only_warmup <- FALSE
+  }
+
+  if (type == "callback") {
+    if ((include_warmup && is.null(object$warmup$callback)) ||
+        (!only_warmup && is.null(object$sample$callback)))
+      stop("cannot extract callback samples for model fit without callback function")
+    if (any(sapply(matchedCall[c("sample", "sample_new_levels")], function(x) !is.null(x)))) {
+      warning("'sample' and 'sample_new_levels' arguments ignored when extracting callback samples")
+    }
+    result <- get_samples(object$callback, include_warmup, only_warmup)
+    return(if (combine_chains) combine_chains_f(result) else result)
   }
   
   is_bernoulli <- object$family$family == "binomial"
@@ -283,7 +295,6 @@ extract.stan4bartFit <-
   }
   
   n_samples <- dim(object$bart_train)[2L]
-  n_obs     <- 0L
   n_chains  <- dim(object$bart_train)[3L]
   n_fixef <- sum(fixef_parameters)
   n_warmup <- if (!is.null(object$warmup$bart_train)) dim(object$warmup$bart_train)[2L] else 0L
@@ -422,14 +433,28 @@ extract.stan4bartFit <-
   if (type %in% c("ev", "ppd") && is_bernoulli)
     result <- pnorm(result)
   if (type %in% "ppd") {
-    if (is_bernoulli) {
-      result <- array(rbinom(length(result), 1L, result), dim(result), dimnames = dimnames(result))
+    weights <- if (sample == "test") object$test$frame[["(weights)"]] else object$frame[["(weights)"]]
+    if (is.null(weights) || length(weights) == 0L) {
+      if (is_bernoulli) {
+        result <- array(rbinom(length(result), 1L, result), dim(result), dimnames = dimnames(result))
+      } else {
+        sigma <- extract(object, "sigma", combine_chains = TRUE)
+        result <- result + 
+          array(rnorm(dim(result)[1L] * n_samples * n_chains, 0, rep(as.vector(sigma),
+                                                                     each = dim(result)[1L])),
+               c(dim(result)[1L], n_samples, n_chains))
+      }
     } else {
-      sigma <- extract(object, "sigma", combine_chains = TRUE)
-      result <- result + 
-        array(rnorm(dim(result)[1L] * n_samples * n_chains, 0, rep(as.vector(sigma),
-                                                                   each = dim(result)[1L])),
-             c(dim(result)[1L], n_samples, n_chains))
+      if (is_bernoulli) {
+        result <- array(rbinom(length(result), 1L, result), dim(result), dimnames = dimnames(result))
+        result <- weights * result
+      } else {
+        n_obs <- dim(result)[1L]
+        n_total_samples <- n_samples * n_chains
+        sigma <- extract(object, "sigma", combine_chains = TRUE)
+        sigma <- rep_len(sigma, n_obs * n_total_samples) * rep(sqrt(1 / weights), each = n_total_samples)
+        result <- aperm(aperm(result, c(2L, 3L, 1L)) + rnorm(n_obs * n_total_samples, 0, sigma), c(3L, 1L, 2L))
+      }
     }
   }
     
@@ -449,7 +474,8 @@ extract.stan4bartFit <-
 fitted.stan4bartFit <-
   function(object,
            type = c("ev", "ppd", "fixef", "indiv.fixef", "ranef", "indiv.ranef",
-                    "indiv.bart", "sigma", "Sigma", "k", "varcount", "stan"),
+                    "indiv.bart", "sigma", "Sigma", "k", "varcount", "stan",
+                    "callback"),
            sample = c("train", "test"),
            sample_new_levels = TRUE,
            ...)
@@ -524,6 +550,16 @@ fitted_fixed <- function(object, x, include_warmup)
 
 fitted_random <- function(object, reTrms, include_warmup, sample_new_levels)
 {
+  # quick version if the new data have the same form as that fitted in the model
+  if (identical(reTrms$cnms, object$reTrms$cnms) && all(row.names(reTrms$Zt) == row.names(object$reTrms$Zt))) {
+    b_rows <- grep("^b\\.", dimnames(object$stan)[[1L]])
+    b_mat <- matrix(object$stan[b_rows,,], length(b_rows), prod(dim(object$stan)[-1L]))
+    return(array(
+      Matrix::crossprod(reTrms$Zt, b_mat), c(ncol(reTrms$Zt), dim(object$stan)[2L:3L]),
+        dimnames = list(observation = NULL, iterations = NULL, chain = dimnames(object$stan)$chain)
+    ))
+  }
+
   n_obs <- ncol(reTrms$Zt)
   
   ns.re <- names(re <- extract(object, "ranef", include_warmup = include_warmup, combine_chains = FALSE))
