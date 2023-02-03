@@ -1,8 +1,8 @@
-0dbd456294a7267ac7aae5fedb44db9d *DESCRIPTION
+fc0d083599fbf36200e171cae5daa4b5 *DESCRIPTION
 85683e302fbf9f04559d43f1c91b596f *NAMESPACE
 e370faafe8ca6f722c9a9eddc658f3e7 *R/generics.R
 df2bb273b2f5c3b12881b3e28d6f7c27 *R/hooks.R
-d71b02db6b43b6fb6574052da2825b4e *R/lme4_functions.R
+781c0aa888fe5d4bd8376fc3cc990342 *R/lme4_functions.R
 679f1efcc870b533e40e7c6a37f6e201 *R/misc.R
 c7416e0cd6a3dbae3e0daa1855f20602 *R/priors.R
 d73199c2e5f9071ede1771ee80f19b7e *R/rstanarm_functions.R
@@ -17,8 +17,8 @@ e78c9b154a5897a9ac2b9015c0606e79 *cleanup
 626520e58e6b0b87c8be8caf3632bc76 *inst/common/friedmanData.R
 235b04f35b20901aa46622f23e880f83 *man/generics.Rd
 d57e56808563ee726b8ae453fadacfe2 *man/stan4bart.Rd
-153eacdde7fce93859d6b0f2a6f4923f *src/Makevars.in
-1d29db5078f475a04e03a7969fb7c2cf *src/Makevars.win
+f4cb98e1fc2ce9d3712d21c72324682d *src/Makevars.in
+6d35c11af08dea5bb47505753789e42a *src/Makevars.win
 67bd1009e75ea6c27729820d6959ad23 *src/bart_util.cpp
 49ff1220ed6759381458a174dc072c5e *src/bart_util.hpp
 a35c77abbb1e778045e99036501198d0 *src/config.h.in
@@ -755,7 +755,7 @@ cc95a79cb45c59745ddc3a7ac74d3396 *src/include/stan/math/prim/fun/MatrixExponenti
 3895bdad605b20d389a7a34f205ae61a *src/include/stan/math/prim/fun/abs.hpp
 aaece153bdceabdcb86d4595a4358877 *src/include/stan/math/prim/fun/accumulator.hpp
 ae231114288be6391b0e3bb40702daf0 *src/include/stan/math/prim/fun/acos.hpp
-283f0bf6b8e1ea5c7074a639dcafb768 *src/include/stan/math/prim/fun/acosh.hpp
+46ab6bf5e210d7992f446e709a27cb4a *src/include/stan/math/prim/fun/acosh.hpp
 1e0c707f5dedf80f9f8dddd0eb0f42a0 *src/include/stan/math/prim/fun/add.hpp
 664e7ce34cefaa6be184d17f6767aca2 *src/include/stan/math/prim/fun/add_diag.hpp
 d04d9a068d08c3c82584cc429171da97 *src/include/stan/math/prim/fun/append_array.hpp
@@ -770,7 +770,7 @@ d04d9a068d08c3c82584cc429171da97 *src/include/stan/math/prim/fun/append_array.hp
 bcfa4da88baaf1f4a6add68b602b6f95 *src/include/stan/math/prim/fun/as_value_column_array_or_scalar.hpp
 6d744da39d0a4efdcf7c0b73cd47cb55 *src/include/stan/math/prim/fun/as_value_column_vector_or_scalar.hpp
 9ad2a0c819e88866bad01dce08cadb43 *src/include/stan/math/prim/fun/asin.hpp
-a5b9c00446e05c9d77a1ce70e4e7c16c *src/include/stan/math/prim/fun/asinh.hpp
+22d30e52f9ccfb6626b74ab7c98bb007 *src/include/stan/math/prim/fun/asinh.hpp
 6b5d7564658a310c79b487323ba5f869 *src/include/stan/math/prim/fun/assign.hpp
 4099a49dbd8d94a54675e642b3a4027c *src/include/stan/math/prim/fun/atan.hpp
 8aa5e18d9099ecad16b316083a79cbba *src/include/stan/math/prim/fun/atan2.hpp
@@ -1022,7 +1022,7 @@ ffdb89ab6134bfb84ea6323f15a10cd3 *src/include/stan/math/prim/fun/positive_constr
 85f5de2e92ee80f32259121c46cba61a *src/include/stan/math/prim/fun/positive_free.hpp
 515f4a9a472919f23bf64af36c31cc46 *src/include/stan/math/prim/fun/positive_ordered_constrain.hpp
 2df303559318ff05ba28e3e37636864a *src/include/stan/math/prim/fun/positive_ordered_free.hpp
-d3028945f7b16471f441409ee7bd2afe *src/include/stan/math/prim/fun/pow.hpp
+41c9567d4cf02e56be71759b574f83ff *src/include/stan/math/prim/fun/pow.hpp
 7c2e940c9dcb941504ba30c7ebdd701c *src/include/stan/math/prim/fun/primitive_value.hpp
 93adc66cee905ad09b5f976924a1d949 *src/include/stan/math/prim/fun/prob_constrain.hpp
 78e9fe3b685deecf8458f1f53b878794 *src/include/stan/math/prim/fun/prob_free.hpp
@@ -2169,14 +2169,14 @@ b3867b83f8828348ea583694b8b5bbd3 *src/misc_adaptiveRadixTree.c
 bf904b3f3a14913c66d78ed5cd46772c *src/misc_string.c
 177e2a89c53f73e903138f49c6a12267 *src/rc_bounds.c
 2d0bed39366bb10a344201baef969bac *src/rc_util.c
-14931b0092ee5dde59e47bd8d85bb78a *src/stan_files/continuous.hpp
+f92638bf318c25e8b07cee86e7ea98f2 *src/stan_files/continuous.hpp
 0d1440ceadd466a2f426910972d498ed *src/stan_files/continuous.stan
 cad712555e26c22b5dfb8f62d78cc971 *src/stan_files/continuous_new.hpp
 d7b42b4817b04109fe14cf58ed9bfbbe *src/stan_sampler.cpp
 3ee98a9017fd2a16426ff1524cb607a9 *src/stan_sampler.hpp
-c21c98f69c85bc5682e23780d4bb32f4 *src/stan_sampler_includes.hpp
+ea9cf25c37a4d22d1b3bc0cde01b1ac9 *src/stan_sampler_includes.hpp
 2510243951f8b25e260a63d8dbe69a1c *tests/testthat.R
-00791eceb2fdc1eca7d86a20950ca448 *tests/testthat/test-01-continuous.R
+fa46603425b3016635e7a72c9d60639f *tests/testthat/test-01-continuous.R
 cde03414df7c9a985f5a155dcd231e1d *tests/testthat/test-02-binary.R
 87b3fb5e5ec1c1aa0a554dd882dba801 *tests/testthat/test-03-na_action.R
 135d9fcfd108ed1ca3489ab5e6449fe6 *tests/testthat/test-04-factor_levels.R
