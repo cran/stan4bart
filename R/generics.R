@@ -277,9 +277,11 @@ extract.stan4bartFit <-
     result <- get_samples(object$stan[sigma_parameters,,,drop = FALSE],
                           include_warmup, only_warmup)
     result <- matrix(result, dim(result)[2L], dim(result)[3L], dimnames = dimnames(result)[2L:3L])
-  } else if (type %in% c("bart_varcount", "k", "stan")) {
-    result <- get_samples(object[[type]],
-                          include_warmup, only_warmup)
+  } else if (type %in% c("varcount", "k", "stan")) {
+    if (type %in% "varcount")
+      result <- get_samples(object$bart_varcount, include_warmup, only_warmup)
+    else
+      result <- get_samples(object[[type]], include_warmup, only_warmup)
   }
   # return parametric components early, as they don't require building model matrices
   if (type %in% c("fixef", "ranef", "sigma", "Sigma", "k", "varcount", "stan")) {
@@ -663,6 +665,8 @@ predict.stan4bartFit <-
     if (is.null(object$sampler.bart))
       stop("predict for bart components requires 'bart_args' to contain 'keepTrees' as 'TRUE'")
     indiv.bart <- .Call(C_stan4bart_predictBART, object$sampler.bart, testData$X.bart, NULL)
+    if (length(dim(indiv.bart)) == 2L)
+      dim(indiv.bart) <- c(dim(indiv.bart), 1L)
     dimnames(indiv.bart) <-  list(observation = NULL, sample = NULL, chain = NULL)
     if (!is_bernoulli) for (i_chain in seq_len(n_chains)) {
       indiv.bart[,,i_chain] <- object$range.bart["min",i_chain] +
@@ -704,6 +708,8 @@ predict.stan4bartFit <-
              c(n_obs, n_samples, n_chains))
     }
   }
+  
+  dimnames(result)[[3L]] <- paste0("chain:", seq_len(dim(result)[3L]))
   
   if (combine_chains) {
     if (is.list(result)) {

@@ -1,6 +1,6 @@
 Package: stan4bart
-Version: 0.0-6
-Date: 2023-02-01
+Version: 0.0-7
+Date: 2023-12-04
 Title: Bayesian Additive Regression Trees with Stan-Sampled Parametric
         Extensions
 Authors@R: c(
@@ -63,7 +63,7 @@ Biarch: true
 UseLTO: true
 URL: https://github.com/vdorie/stan4bart
 BugReports: https://github.com/vdorie/stan4bart/issues
-Packaged: 2023-02-01 20:30:32 UTC; vdorie
+Packaged: 2023-12-08 12:43:26 UTC; vdorie
 Author: Vincent Dorie [aut, cre] (<https://orcid.org/0000-0002-9576-3064>),
   Ben Goodrich [ctb] (rstanarm_functions.R, StanHeaders),
   Jonah Gabry [ctb] (rstanarm_functions.R, StanHeaders),
@@ -128,4 +128,4 @@ Author: Vincent Dorie [aut, cre] (<https://orcid.org/0000-0002-9576-3064>),
     <https://orcid.org/0000-0002-5220-1985>)
 Maintainer: Vincent Dorie <vdorie@gmail.com>
 Repository: CRAN
-Date/Publication: 2023-02-03 13:10:02 UTC
+Date/Publication: 2023-12-08 14:10:02 UTC
