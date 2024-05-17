@@ -1,9 +1,9 @@
-1a36cb23f83f503d54051b9b1cff53b6 *DESCRIPTION
+f279b15e7cbef47a933e6a91f2e32799 *DESCRIPTION
 85683e302fbf9f04559d43f1c91b596f *NAMESPACE
 bdb8c8938ca0d2a0e59018562be0dd7a *R/generics.R
 df2bb273b2f5c3b12881b3e28d6f7c27 *R/hooks.R
 2ca87bd6bb2088b761f75566ef0dfce4 *R/lme4_functions.R
-88d755790e5037e6d8f5169718ca56e1 *R/misc.R
+96c191694dfbe96eb28d65f4c4c0361a *R/misc.R
 c7416e0cd6a3dbae3e0daa1855f20602 *R/priors.R
 d73199c2e5f9071ede1771ee80f19b7e *R/rstanarm_functions.R
 42511522a055e21539a561584c86a24c *R/stan4bart.R
@@ -13,12 +13,12 @@ e78c9b154a5897a9ac2b9015c0606e79 *cleanup
 14d41058f7bf05db8de5f25f8f69385b *configure
 9af930d9316e3d908f1830c13872006c *configure.ac
 26f75e2670c755acaa359daa02e91003 *configure.win
-71728542a9517277cf858a5b3ef5e4ba *inst/NEWS.Rd
+16f6158d6b410efdb16e14790fcbda49 *inst/NEWS.Rd
 626520e58e6b0b87c8be8caf3632bc76 *inst/common/friedmanData.R
 235b04f35b20901aa46622f23e880f83 *man/generics.Rd
 d57e56808563ee726b8ae453fadacfe2 *man/stan4bart.Rd
 f4cb98e1fc2ce9d3712d21c72324682d *src/Makevars.in
-6d35c11af08dea5bb47505753789e42a *src/Makevars.win
+9a416d21331f3fe62fabbd9cf67149c8 *src/Makevars.win
 67bd1009e75ea6c27729820d6959ad23 *src/bart_util.cpp
 49ff1220ed6759381458a174dc072c5e *src/bart_util.hpp
 a35c77abbb1e778045e99036501198d0 *src/config.h.in

@@ -75,4 +75,3 @@ delete.weights <- function(termobj, weights)
   
   termobj
 }
-
