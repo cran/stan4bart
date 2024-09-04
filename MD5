@@ -1,4 +1,4 @@
-f279b15e7cbef47a933e6a91f2e32799 *DESCRIPTION
+c4162c86ded0fa59415e49ecc5c358c1 *DESCRIPTION
 85683e302fbf9f04559d43f1c91b596f *NAMESPACE
 bdb8c8938ca0d2a0e59018562be0dd7a *R/generics.R
 df2bb273b2f5c3b12881b3e28d6f7c27 *R/hooks.R
@@ -15,8 +15,8 @@ e78c9b154a5897a9ac2b9015c0606e79 *cleanup
 26f75e2670c755acaa359daa02e91003 *configure.win
 16f6158d6b410efdb16e14790fcbda49 *inst/NEWS.Rd
 626520e58e6b0b87c8be8caf3632bc76 *inst/common/friedmanData.R
-235b04f35b20901aa46622f23e880f83 *man/generics.Rd
-d57e56808563ee726b8ae453fadacfe2 *man/stan4bart.Rd
+5a26d8ea28ba11f5aeec411f491b88d7 *man/generics.Rd
+5eb78148b8c43521a8fa369a883eed76 *man/stan4bart.Rd
 f4cb98e1fc2ce9d3712d21c72324682d *src/Makevars.in
 9a416d21331f3fe62fabbd9cf67149c8 *src/Makevars.win
 67bd1009e75ea6c27729820d6959ad23 *src/bart_util.cpp
@@ -2016,7 +2016,7 @@ cf7a36ae6659f78f88d967deb03e3658 *src/include/stan/model/indexing/access_helpers
 a1f01f9bee12d07feaedfbd29822ea87 *src/include/stan/model/log_prob_grad.hpp
 a6891a3e3d5e7c8fdf1b709ec86b077b *src/include/stan/model/log_prob_propto.hpp
 93d82b2922af3561b4154ba9160a103b *src/include/stan/model/model_base.hpp
-7b4c199bbe8f1a918155304f1783d05c *src/include/stan/model/model_base_crtp.hpp
+2bde9f295315d505f8887ac0ced5e693 *src/include/stan/model/model_base_crtp.hpp
 3bb6175df3b141a208e1a35b3891a19d *src/include/stan/model/model_functional.hpp
 a389fe44f299e24a63214ad1db8b189d *src/include/stan/model/model_header.hpp
 0b2e0cb8a3d92e3c18e6530220b4ee3e *src/include/stan/model/prob_grad.hpp

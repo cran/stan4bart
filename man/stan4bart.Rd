@@ -8,7 +8,7 @@
   non-parametric, BART component and one or more of a parametric fixed
   effect (unmodeled coefficients), or a parametric random effect
   (modeled coefficients). If
-  \eqn{f(x)} is a BART \dQuote{sum-of-trees} \link[=bart]{model}, fits:
+  \eqn{f(x)} is a BART \dQuote{sum-of-trees} \link[dbarts:bart]{model}, fits:
 \itemize{
   \item For continuous response variables:
   \deqn{Y \mid b \sim \mathrm{N}\left(f(X^b) + X^f\beta + Zb, \sigma^2\right) \\
@@ -182,7 +182,7 @@ stan4bart(formula,
     The \code{stan_args} and \code{bart_args} arguments to \code{stan4bart} can
     be used to pass further arguments to \code{stan} and \code{bart}
     respectively. These are similar to the functions \code{stan} in the
-    \code{rstan} package and \code{\link{bart}}, but not identical as
+    \code{rstan} package and \code{\link[dbarts]{bart}}, but not identical as
     \code{stan4bart} constructs its own model internally.
     
     Stan arguments include:
@@ -200,7 +200,7 @@ stan4bart(formula,
     
     BART arguments include:
     \itemize{
-      \item further arguments to \code{\link{dbartsControl}} that are not
+      \item further arguments to \code{\link[dbarts]{dbartsControl}} that are not
       specified by \code{stan4bart}, such as \code{keepTrees} or
       \code{n.trees}; keeping trees can be costly in terms of memory, but is
       required to use \code{\link[=stan4bart-generics]{predict}}
@@ -260,7 +260,7 @@ stan4bart(formula,
   \item{\code{call}}{original call}
   
   Stored data:
-  \item{\code{bartData}}{\code{\link[=dbartsData]{data}} object used for BART
+  \item{\code{bartData}}{\code{\link[dbarts:dbartsData]{data}} object used for BART
   component}
   \item{\code{X}}{fixed effect design matrix or NULL}
   \item{\code{X_means}}{column means of fixed effect design matrix when
@@ -302,7 +302,7 @@ stan4bart(formula,
   Vincent Dorie: \email{vdorie@gmail.com}.
 }
 \seealso{
-  \code{\link{bart}}, \code{\link[lme4]{lmer}}, and \code{stan_glmer} in the 
+  \code{\link[dbarts]{bart}}, \code{\link[lme4]{lmer}}, and \code{stan_glmer} in the 
   \code{rstanarm} package
 }
 \examples{
