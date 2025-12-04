@@ -1,8 +1,8 @@
-c4162c86ded0fa59415e49ecc5c358c1 *DESCRIPTION
+52238ddc982e497da6e6d81b12a19201 *DESCRIPTION
 85683e302fbf9f04559d43f1c91b596f *NAMESPACE
 bdb8c8938ca0d2a0e59018562be0dd7a *R/generics.R
 df2bb273b2f5c3b12881b3e28d6f7c27 *R/hooks.R
-2ca87bd6bb2088b761f75566ef0dfce4 *R/lme4_functions.R
+7a9a1b26b386c963694009a574b20e8d *R/lme4_functions.R
 96c191694dfbe96eb28d65f4c4c0361a *R/misc.R
 c7416e0cd6a3dbae3e0daa1855f20602 *R/priors.R
 d73199c2e5f9071ede1771ee80f19b7e *R/rstanarm_functions.R
@@ -10,8 +10,8 @@ d73199c2e5f9071ede1771ee80f19b7e *R/rstanarm_functions.R
 79b6b027a3b342b70d3df45e9e502e9b *R/stan4bart_fit.R
 726b8042d9490cdccfe21171d496b04c *R/test_data.R
 e78c9b154a5897a9ac2b9015c0606e79 *cleanup
-14d41058f7bf05db8de5f25f8f69385b *configure
-9af930d9316e3d908f1830c13872006c *configure.ac
+58414efc41a873950789645e3ae9d34e *configure
+e67ba199d50ffa860c5726354dcca066 *configure.ac
 26f75e2670c755acaa359daa02e91003 *configure.win
 16f6158d6b410efdb16e14790fcbda49 *inst/NEWS.Rd
 626520e58e6b0b87c8be8caf3632bc76 *inst/common/friedmanData.R

@@ -1,6 +1,6 @@
 Package: stan4bart
-Version: 0.0-10
-Date: 2024-09-03
+Version: 0.0-11
+Date: 2025-12-04
 Title: Bayesian Additive Regression Trees with Stan-Sampled Parametric
         Extensions
 Authors@R: c(
@@ -55,7 +55,7 @@ Depends: R (>= 3.5-0), methods, dbarts (>= 0.9-21)
 Imports: stats, Matrix, parallel, RcppParallel (>= 5.1.1)
 LinkingTo: BH (>= 1.72.0.3), Rcpp (>= 1.0.5), RcppEigen (>= 0.3.3.7.0),
         RcppParallel (>= 5.1.1), dbarts (>= 0.9-20)
-Suggests: testthat (>= 2.0-0), lme4
+Suggests: testthat (>= 2.0-0), lme4, reformulas
 Description: Fits semiparametric linear and multilevel models with non-parametric additive Bayesian additive regression tree (BART; Chipman, George, and McCulloch (2010) <doi:10.1214/09-AOAS285>) components and Stan (Stan Development Team (2021) <https://mc-stan.org/>) sampled parametric ones. Multilevel models can be expressed using 'lme4' syntax (Bates, Maechler, Bolker, and Walker (2015) <doi:10.18637/jss.v067.i01>).
 License: GPL (>= 3)
 NeedsCompilation: yes
@@ -63,32 +63,33 @@ Biarch: true
 UseLTO: true
 URL: https://github.com/vdorie/stan4bart
 BugReports: https://github.com/vdorie/stan4bart/issues
-Packaged: 2024-09-03 16:00:59 UTC; vdorie
-Author: Vincent Dorie [aut, cre] (<https://orcid.org/0000-0002-9576-3064>),
+Packaged: 2025-12-04 15:41:20 UTC; vdorie
+Author: Vincent Dorie [aut, cre] (ORCID:
+    <https://orcid.org/0000-0002-9576-3064>),
   Ben Goodrich [ctb] (rstanarm_functions.R, StanHeaders),
   Jonah Gabry [ctb] (rstanarm_functions.R, StanHeaders),
   Imad Ali [ctb] (rstanarm_functions.R),
   Sam Brilleman [ctb] (rstanarm_functions.R),
-  Paul-Christian Burkner [ctb] (rstanarm_functions.R,
+  Paul-Christian Burkner [ctb] (rstanarm_functions.R, ORCID:
     <https://orcid.org/0000-0001-5765-8995>),
-  Joshua Pritikin [ctb] (StanHeaders,
+  Joshua Pritikin [ctb] (StanHeaders, ORCID:
     <https://orcid.org/0000-0002-9862-5484>),
-  Andrew Gelman [ctb] (StanHeaders,
+  Andrew Gelman [ctb] (StanHeaders, ORCID:
     <https://orcid.org/0000-0002-6975-2601>),
   Bob Carpenter [ctb] (StanHeaders),
   Matt Hoffman [ctb] (StanHeaders),
   Daniel Lee [ctb] (StanHeaders),
-  Michael Betancourt [ctb] (StanHeaders,
+  Michael Betancourt [ctb] (StanHeaders, ORCID:
     <https://orcid.org/0000-0002-2900-0931>),
-  Marcus Brubaker [ctb] (StanHeaders,
+  Marcus Brubaker [ctb] (StanHeaders, ORCID:
     <https://orcid.org/0000-0002-7892-9026>),
   Jiqiang Guo [ctb] (StanHeaders),
   Peter Li [ctb] (StanHeaders),
   Allen Riddell [ctb] (StanHeaders),
-  Marco Inacio [ctb] (StanHeaders,
+  Marco Inacio [ctb] (StanHeaders, ORCID:
     <https://orcid.org/0000-0002-6865-5404>),
   Mitzi Morris [ctb] (StanHeaders),
-  Jeffrey Arnold [ctb] (StanHeaders,
+  Jeffrey Arnold [ctb] (StanHeaders, ORCID:
     <https://orcid.org/0000-0001-9953-3904>),
   Rob Goedman [ctb] (StanHeaders),
   Brian Lau [ctb] (StanHeaders),
@@ -103,13 +104,13 @@ Author: Vincent Dorie [aut, cre] (<https://orcid.org/0000-0002-9576-3064>),
   Lawrence Livermore National Security [cph] (CVODES),
   The Regents of the University of California [cph] (CVODES),
   Southern Methodist University [cph] (CVODES),
-  Douglas Bates [ctb] (lme4_functions.R,
+  Douglas Bates [ctb] (lme4_functions.R, ORCID:
     <https://orcid.org/0000-0001-8316-9503>),
-  Martin Maechler [ctb] (lme4_functions.R,
+  Martin Maechler [ctb] (lme4_functions.R, ORCID:
     <https://orcid.org/0000-0002-8685-9910>),
-  Ben Bolker [ctb] (lme4_functions.R,
+  Ben Bolker [ctb] (lme4_functions.R, ORCID:
     <https://orcid.org/0000-0002-2127-0443>),
-  Steve Walker [ctb] (lme4_functions.R,
+  Steve Walker [ctb] (lme4_functions.R, ORCID:
     <https://orcid.org/0000-0002-4394-9078>),
   Armon Dadgar [ctb] (adaptive radix tree),
   Bothner Per [ctb] (config.guess),
@@ -121,11 +122,11 @@ Author: Vincent Dorie [aut, cre] (<https://orcid.org/0000-0002-9576-3064>),
   Michael Petch [ctb] (ax_ext.m4, ax_gcc_x86_avx_xgetbv.m4,
     ax_gcc_x86_cpuid.m4),
   Rafael de Lucena Valle [ctb] (ax_ext.m4),
-  Steven G. Johnson [ctb] (ax_gcc_x86_cpuid.m4,
+  Steven G. Johnson [ctb] (ax_gcc_x86_cpuid.m4, ORCID:
     <https://orcid.org/0000-0001-7327-4967>),
   Matteo Frigo [ctb] (ax_gcc_x86_cpuid.m4),
-  Scott Pakin [ctb] (ax_func_posix_memalign.m4,
+  Scott Pakin [ctb] (ax_func_posix_memalign.m4, ORCID:
     <https://orcid.org/0000-0002-5220-1985>)
 Maintainer: Vincent Dorie <vdorie@gmail.com>
 Repository: CRAN
-Date/Publication: 2024-09-04 16:50:02 UTC
+Date/Publication: 2025-12-04 16:30:02 UTC
