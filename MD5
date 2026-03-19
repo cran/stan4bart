@@ -1,4 +1,4 @@
-52238ddc982e497da6e6d81b12a19201 *DESCRIPTION
+8b46edaffae8c41dc4ea47593bffc5f9 *DESCRIPTION
 85683e302fbf9f04559d43f1c91b596f *NAMESPACE
 bdb8c8938ca0d2a0e59018562be0dd7a *R/generics.R
 df2bb273b2f5c3b12881b3e28d6f7c27 *R/hooks.R
@@ -34,7 +34,7 @@ ee9e74f90c8a42c5a0d23aa827704e40 *src/include/misc/memalign.h
 d07dfb8dd58f797d25a5f926f46916a2 *src/include/misc/stddef.h
 c8e04ccce1af5b350b27a02add19ebab *src/include/misc/string.h
 b8d9c47a1249c35bee75832cd4aa4a17 *src/include/rc/bounds.h
-762d9bb4352819e799c2c87d89ee583d *src/include/rc/util.h
+ce8fe3546eeb7e478c108fcba7044b7d *src/include/rc/util.h
 072ccab589d5eedba967d45d2f639744 *src/include/rstan/io/r_ostream.hpp
 207f5b117be93aad28c00c767baf5577 *src/include/stan/analyze/mcmc/autocovariance.hpp
 c5794ebbab8013e0c4b42506f89b83fe *src/include/stan/analyze/mcmc/compute_effective_sample_size.hpp
@@ -2168,7 +2168,7 @@ dc86e90a5ce0daefa818f73280ec355e *src/interruptable_sampler.hpp
 b3867b83f8828348ea583694b8b5bbd3 *src/misc_adaptiveRadixTree.c
 bf904b3f3a14913c66d78ed5cd46772c *src/misc_string.c
 177e2a89c53f73e903138f49c6a12267 *src/rc_bounds.c
-2d0bed39366bb10a344201baef969bac *src/rc_util.c
+66d96251b82b59b99fc433711dbd20c4 *src/rc_util.c
 f92638bf318c25e8b07cee86e7ea98f2 *src/stan_files/continuous.hpp
 0d1440ceadd466a2f426910972d498ed *src/stan_files/continuous.stan
 cad712555e26c22b5dfb8f62d78cc971 *src/stan_files/continuous_new.hpp
