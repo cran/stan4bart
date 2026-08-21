@@ -1,6 +1,6 @@
-8b46edaffae8c41dc4ea47593bffc5f9 *DESCRIPTION
+38fdd8f683fe829ae535e3f3f43fd396 *DESCRIPTION
 85683e302fbf9f04559d43f1c91b596f *NAMESPACE
-bdb8c8938ca0d2a0e59018562be0dd7a *R/generics.R
+90b3edd9a7a7a79bafe6b9aef20f3fd1 *R/generics.R
 df2bb273b2f5c3b12881b3e28d6f7c27 *R/hooks.R
 7a9a1b26b386c963694009a574b20e8d *R/lme4_functions.R
 96c191694dfbe96eb28d65f4c4c0361a *R/misc.R
@@ -2163,7 +2163,7 @@ cbfe0a2dee4d38517769933b3901c418 *src/include/sundials/sunmemory/sunmemory_sycl.
 4b24e5c668ae7f65c4e552302930d4e3 *src/include/sundials/sunnonlinsol/sunnonlinsol_fixedpoint.h
 4faccf6b4fd22be8435271d7f9bac24c *src/include/sundials/sunnonlinsol/sunnonlinsol_newton.h
 cf12e0797e2e7cf945e54a42163660c9 *src/include/sundials/sunnonlinsol/sunnonlinsol_petscsnes.h
-4a38d56ec89a7c84b44ae707ff4e3a2a *src/init.cpp
+c0a1f49ce959b162ba7d9c2994a1ede4 *src/init.cpp
 dc86e90a5ce0daefa818f73280ec355e *src/interruptable_sampler.hpp
 b3867b83f8828348ea583694b8b5bbd3 *src/misc_adaptiveRadixTree.c
 bf904b3f3a14913c66d78ed5cd46772c *src/misc_string.c
@@ -2171,7 +2171,6 @@ bf904b3f3a14913c66d78ed5cd46772c *src/misc_string.c
 66d96251b82b59b99fc433711dbd20c4 *src/rc_util.c
 f92638bf318c25e8b07cee86e7ea98f2 *src/stan_files/continuous.hpp
 0d1440ceadd466a2f426910972d498ed *src/stan_files/continuous.stan
-cad712555e26c22b5dfb8f62d78cc971 *src/stan_files/continuous_new.hpp
 c8ed7ed655db195e343bb24ad781cad1 *src/stan_sampler.cpp
 3ee98a9017fd2a16426ff1524cb607a9 *src/stan_sampler.hpp
 ea9cf25c37a4d22d1b3bc0cde01b1ac9 *src/stan_sampler_includes.hpp
