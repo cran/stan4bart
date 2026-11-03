@@ -1,4 +1,4 @@
-38fdd8f683fe829ae535e3f3f43fd396 *DESCRIPTION
+4a5e6e9ad6ac4dc0d8ada74767c14459 *DESCRIPTION
 85683e302fbf9f04559d43f1c91b596f *NAMESPACE
 90b3edd9a7a7a79bafe6b9aef20f3fd1 *R/generics.R
 df2bb273b2f5c3b12881b3e28d6f7c27 *R/hooks.R
@@ -13,7 +13,7 @@ e78c9b154a5897a9ac2b9015c0606e79 *cleanup
 58414efc41a873950789645e3ae9d34e *configure
 e67ba199d50ffa860c5726354dcca066 *configure.ac
 26f75e2670c755acaa359daa02e91003 *configure.win
-16f6158d6b410efdb16e14790fcbda49 *inst/NEWS.Rd
+51f3f8f82b7513d12a9c31dd278186e0 *inst/NEWS.Rd
 626520e58e6b0b87c8be8caf3632bc76 *inst/common/friedmanData.R
 5a26d8ea28ba11f5aeec411f491b88d7 *man/generics.Rd
 5eb78148b8c43521a8fa369a883eed76 *man/stan4bart.Rd
@@ -666,7 +666,7 @@ c053893366b2e9fe75190b8a0d6bafba *src/include/stan/math/prim/core/operator_equal
 21ad5606eca05df6f46c8cce9a2a64a2 *src/include/stan/math/prim/core/operator_not_equal.hpp
 23f5b979767b0fa842296b0f9b1c5fea *src/include/stan/math/prim/core/operator_plus.hpp
 f08d0931cdcec557c386bf49c9810e2f *src/include/stan/math/prim/core/operator_subtraction.hpp
-13f51d1dc6272d3f873e5004f30dfffa *src/include/stan/math/prim/eigen_plugins.h
+e43e736820b84933998516781069f8a1 *src/include/stan/math/prim/eigen_plugins.h
 0757d20a06ae683f6b7fb3e5a35cc678 *src/include/stan/math/prim/err.hpp
 6b0df760e0117c656af5a9608ee38ef1 *src/include/stan/math/prim/err/check_2F1_converges.hpp
 64160c46690ecdda4c47a8bdfdc79725 *src/include/stan/math/prim/err/check_3F2_converges.hpp
@@ -1609,7 +1609,7 @@ b10a5ffd0ca2da3d5c8187ed77ef4856 *src/include/stan/math/prim/prob/wishart_choles
 56ca50d8ec9bf2945bf88a175247243f *src/include/stan/math/prim/prob/wishart_rng.hpp
 a7468f68d0f46bca38c8eb97681fd766 *src/include/stan/math/rev.hpp
 7b9723fc822a1fa567e81e015e9319d4 *src/include/stan/math/rev/core.hpp
-bb711c1dde0e3a09639e7573f4a94148 *src/include/stan/math/rev/core/Eigen_NumTraits.hpp
+e08b93882438d531d1e97c1324a5df39 *src/include/stan/math/rev/core/Eigen_NumTraits.hpp
 1f70a6f3552b47e485066b4ded449ea6 *src/include/stan/math/rev/core/accumulate_adjoints.hpp
 89489d3b6596201974b52cf855c4ce8e *src/include/stan/math/rev/core/arena_allocator.hpp
 429bc069cdc97705e6818f27c7b70b48 *src/include/stan/math/rev/core/arena_matrix.hpp
